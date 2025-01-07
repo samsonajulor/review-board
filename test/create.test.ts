@@ -2,6 +2,7 @@ import { handler } from '../lambda/create';
 import { mockClient } from 'aws-sdk-client-mock';
 import { ComprehendClient, DetectSentimentCommand } from '@aws-sdk/client-comprehend';
 import { DynamoDBDocumentClient, PutCommand } from '@aws-sdk/lib-dynamodb';
+import { mockEvent, mockContext } from './test-utils';
 
 const ddbMock = mockClient(DynamoDBDocumentClient);
 const comprehendMock = mockClient(ComprehendClient);
@@ -18,13 +19,9 @@ test('Create handler processes sentiment and saves review', async () => {
     SentimentScore: { Positive: 0.9, Neutral: 0.1, Negative: 0.0, Mixed: 0.0 },
   });
 
-  const event = {
-    body: JSON.stringify({ reviewText: 'Great service!' }),
-  };
+  const event = mockEvent({ 'cognito:groups': 'Admins' }, { reviewText: 'Great service!' });
 
-  const response = await handler(event);
-
-  console.log({ response });
+  const response = await handler(event, mockContext);
 
   expect(response.statusCode).toBe(201);
   const body = JSON.parse(response.body);

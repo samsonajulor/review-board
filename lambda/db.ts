@@ -12,33 +12,22 @@ export class Database {
   }
 
   async putItem(item: any) {
-    const command = new PutCommand({
-      TableName: this.tableName,
-      Item: item,
-    });
+    const command = new PutCommand({ TableName: this.tableName, Item: item });
     return ddbDocClient.send(command);
   }
 
   async getItem(key: any) {
-    const command = new GetCommand({
-      TableName: this.tableName,
-      Key: key,
-    });
+    const command = new GetCommand({ TableName: this.tableName, Key: key });
     return ddbDocClient.send(command);
   }
 
   async deleteItem(key: any) {
-    const command = new DeleteCommand({
-      TableName: this.tableName,
-      Key: key,
-    });
+    const command = new DeleteCommand({ TableName: this.tableName, Key: key });
     return ddbDocClient.send(command);
   }
 
   async scanTable() {
-    const command = new ScanCommand({
-      TableName: this.tableName,
-    });
+    const command = new ScanCommand({ TableName: this.tableName });
     return ddbDocClient.send(command);
   }
 }

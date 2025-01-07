@@ -1,4 +1,5 @@
 import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as nodejsfunction from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
 import { Construct } from 'constructs';
 import { PermissionConstruct } from './permissions';
@@ -22,20 +23,30 @@ export class LambdaConstruct extends Construct {
     });
 
     const createLambda = (id: string, handler: string) =>
-      new lambda.Function(this, id, {
-        runtime: lambda.Runtime.NODEJS_18_X,
-        handler,
-        code: lambda.Code.fromAsset(path.join(__dirname, '../lambda')),
+      new nodejsfunction.NodejsFunction(this, id, {
+        runtime: lambda.Runtime.NODEJS_20_X,
+        functionName: `reviewBoard_${handler}`,
+        handler: `handler`,
+        entry: path.join(__dirname, `../lambda/${handler}.ts`),
         environment: {
           TABLE_NAME: process.env.TABLE_NAME || 'ReviewsTable',
         },
         deadLetterQueue: dlq,
+        bundling: {
+          externalModules: [
+            '@aws-lambda-powertools/commons',
+            '@aws-lambda-powertools/logger',
+            '@aws-lambda-powertools/metrics',
+            '@aws-lambda-powertools/tracer',
+          ],
+          forceDockerBundling: false,
+        },
       });
 
-    this.createReviewFn = createLambda('CreateReviewFunction', 'create.handler');
-    this.getReviewFn = createLambda('GetReviewFunction', 'get.handler');
-    this.updateReviewFn = createLambda('UpdateReviewFunction', 'update.handler');
-    this.deleteReviewFn = createLambda('DeleteReviewFunction', 'delete.handler');
+    this.createReviewFn = createLambda('CreateReviewFunction', 'create');
+    this.getReviewFn = createLambda('GetReviewFunction', 'get');
+    this.updateReviewFn = createLambda('UpdateReviewFunction', 'update');
+    this.deleteReviewFn = createLambda('DeleteReviewFunction', 'delete');
 
     // Attach Permissions
     props.permissions.attachSharedPermissions(this.createReviewFn);

@@ -216,8 +216,8 @@ This backend is intended for businesses that want to integrate customer feedback
 ### **6.2 Install Dependencies**
 1. Clone the repository:
    ```bash
-   git clone https://github.com/samsonajulor/review-board-backend.git
-   cd review-board-backend
+   git clone https://github.com/samsonajulor/review-board.git
+   cd review-board
    ```
 2. Install Node.js dependencies:
    ```bash

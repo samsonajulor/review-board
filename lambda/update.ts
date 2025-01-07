@@ -1,48 +1,49 @@
+import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
 import { Database } from './db';
 import { ComprehendClient, DetectSentimentCommand } from '@aws-sdk/client-comprehend';
-import { rbacMiddleware, validationMiddleware } from './middleware';
-import { reviewSchema } from '../validation/review.schema';
+import { logger } from './logger';
 
 const db = new Database(process.env.TABLE_NAME || 'ReviewsTable');
 const comprehendClient = new ComprehendClient({});
 
-export const handler = async (event: any) => {
-  const rbacResult = await rbacMiddleware(['Admins'])(event, async () => {
-    const validationResult = await validationMiddleware(reviewSchema)(event, async () => {
-      try {
-        const id = event.pathParameters?.id;
-        if (!id) {
-          return { statusCode: 400, body: JSON.stringify({ error: 'Missing review ID' }) };
-        }
+export const handler = async (event: APIGatewayProxyEvent, context: Context): Promise<APIGatewayProxyResult> => {
+  logger.addContext(context);
+  logger.info('Received event', { event });
 
-        const updatedReview = JSON.parse(event.body);
+  try {
+    const id = event.pathParameters?.id;
 
-        const command = new DetectSentimentCommand({
-          Text: updatedReview.reviewText,
-          LanguageCode: 'en',
-        });
+    if (!id) {
+      return { statusCode: 400, body: JSON.stringify({ error: 'Missing review ID' }) };
+    }
 
-        const sentimentResult = await comprehendClient.send(command);
+    const updatedReview = JSON.parse(event.body || '{}');
 
-        const item = {
-          id,
-          createdAt: updatedReview.createdAt || new Date().toISOString(),
-          reviewText: updatedReview.reviewText,
-          sentiment: sentimentResult.Sentiment,
-          sentimentScore: sentimentResult.SentimentScore,
-        };
-
-        await db.putItem(item);
-
-        return { statusCode: 200, body: JSON.stringify({ message: 'Review updated', item }) };
-      } catch (error) {
-        console.error('Error updating review:', error);
-        return { statusCode: 500, body: JSON.stringify({ error: 'Could not update review' }) };
-      }
+    const command = new DetectSentimentCommand({
+      Text: updatedReview.reviewText,
+      LanguageCode: 'en',
     });
 
-    return validationResult;
-  });
+    const sentimentResult = await comprehendClient.send(command);
+    logger.info('Sentiment analysis result', { sentimentResult });
 
-  return rbacResult;
+    const item = {
+      id,
+      createdAt: updatedReview.createdAt || new Date().toISOString(),
+      reviewText: updatedReview.reviewText,
+      sentiment: sentimentResult.Sentiment,
+      sentimentScore: sentimentResult.SentimentScore,
+    };
+
+    await db.putItem(item);
+    logger.info('Updated review in database', { item });
+
+    return { statusCode: 200, body: JSON.stringify({ message: 'Review updated', item }) };
+  } catch (error) {
+    logger.error('Error updating review', { error });
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: 'Could not update review' }),
+    };
+  }
 };

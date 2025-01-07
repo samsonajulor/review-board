@@ -1,16 +1,17 @@
+import * as cdk from 'aws-cdk-lib';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as cognito from 'aws-cdk-lib/aws-cognito';
-import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 
 interface ApiGatewayProps {
-  userPool: cognito.UserPool;
+  userPool: cognito.IUserPool;
   lambdas: {
-    createReviewFn: lambda.Function;
-    getReviewFn: lambda.Function;
-    updateReviewFn: lambda.Function;
-    deleteReviewFn: lambda.Function;
+    createReviewFn: cdk.aws_lambda.IFunction;
+    getReviewFn: cdk.aws_lambda.IFunction;
+    updateReviewFn: cdk.aws_lambda.IFunction;
+    deleteReviewFn: cdk.aws_lambda.IFunction;
   };
+  logsRole: cdk.aws_iam.IRole;
 }
 
 export class ApiGatewayConstruct extends Construct {
@@ -18,39 +19,34 @@ export class ApiGatewayConstruct extends Construct {
     super(scope, id);
 
     const api = new apigateway.RestApi(this, 'ReviewBoardApi', {
-      restApiName: 'ReviewBoard Service',
+      restApiName: 'ReviewBoardAPI',
       deployOptions: {
         loggingLevel: apigateway.MethodLoggingLevel.INFO,
         dataTraceEnabled: true,
+        metricsEnabled: true,
+        accessLogDestination: new apigateway.LogGroupLogDestination(
+          new cdk.aws_logs.LogGroup(this, 'ApiAccessLogs', {
+            retention: cdk.aws_logs.RetentionDays.ONE_WEEK,
+          })
+        ),
+        accessLogFormat: apigateway.AccessLogFormat.jsonWithStandardFields(),
       },
     });
 
-    const reviewsResource = api.root.addResource('reviews');
-    const reviewIdResource = reviewsResource.addResource('{id}');
-
-    const cognitoAuthorizer = new apigateway.CognitoUserPoolsAuthorizer(this, 'CognitoAuthorizer', {
+    // Add Cognito Authorizer
+    const authorizer = new apigateway.CognitoUserPoolsAuthorizer(this, 'Authorizer', {
       cognitoUserPools: [props.userPool],
     });
 
-    // Attach API Gateway Methods
-    reviewsResource.addMethod('POST', new apigateway.LambdaIntegration(props.lambdas.createReviewFn), {
-      authorizationType: apigateway.AuthorizationType.COGNITO,
-      authorizer: cognitoAuthorizer,
-    });
+    // Define resources and methods
+    const reviewsResource = api.root.addResource('reviews');
+    reviewsResource.addMethod('POST', new apigateway.LambdaIntegration(props.lambdas.createReviewFn), { authorizer });
 
-    reviewsResource.addMethod('GET', new apigateway.LambdaIntegration(props.lambdas.getReviewFn), {
-      authorizationType: apigateway.AuthorizationType.COGNITO,
-      authorizer: cognitoAuthorizer,
-    });
+    reviewsResource.addMethod('GET', new apigateway.LambdaIntegration(props.lambdas.getReviewFn), { authorizer });
 
-    reviewIdResource.addMethod('PUT', new apigateway.LambdaIntegration(props.lambdas.updateReviewFn), {
-      authorizationType: apigateway.AuthorizationType.COGNITO,
-      authorizer: cognitoAuthorizer,
-    });
+    const reviewResource = reviewsResource.addResource('{id}');
+    reviewResource.addMethod('PUT', new apigateway.LambdaIntegration(props.lambdas.updateReviewFn), { authorizer });
 
-    reviewIdResource.addMethod('DELETE', new apigateway.LambdaIntegration(props.lambdas.deleteReviewFn), {
-      authorizationType: apigateway.AuthorizationType.COGNITO,
-      authorizer: cognitoAuthorizer,
-    });
+    reviewResource.addMethod('DELETE', new apigateway.LambdaIntegration(props.lambdas.deleteReviewFn), { authorizer });
   }
 }
