@@ -6,39 +6,33 @@ const comprehendClient = new ComprehendClient({});
 
 export const handler = async (event: any) => {
   try {
-    const id = event.pathParameters.id;
+    const id = event.pathParameters?.id;
+    if (!id) {
+      return { statusCode: 400, body: JSON.stringify({ error: 'Missing review ID' }) };
+    }
+
     const updatedReview = JSON.parse(event.body);
 
-    // Sentiment Analysis
-    const sentimentResult = await comprehendClient.send(
-      new DetectSentimentCommand({
-        Text: updatedReview.reviewText,
-        LanguageCode: 'en',
-      })
-    );
+    const command = new DetectSentimentCommand({
+      Text: updatedReview.reviewText,
+      LanguageCode: 'en',
+    });
+
+    const sentimentResult = await comprehendClient.send(command);
 
     const item = {
       id,
+      createdAt: updatedReview.createdAt || new Date().toISOString(),
       reviewText: updatedReview.reviewText,
       sentiment: sentimentResult.Sentiment,
       sentimentScore: sentimentResult.SentimentScore,
     };
 
-    // Update in DynamoDB
-    const result = await db.updateItem(item);
+    await db.putItem(item);
 
-    return {
-      statusCode: 200,
-      body: JSON.stringify({
-        message: 'Review updated',
-        updatedAttributes: result.Attributes,
-      }),
-    };
+    return { statusCode: 200, body: JSON.stringify({ message: 'Review updated', item }) };
   } catch (error) {
     console.error('Error updating review:', error);
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: 'Could not update review' }),
-    };
+    return { statusCode: 500, body: JSON.stringify({ error: 'Could not update review' }) };
   }
 };

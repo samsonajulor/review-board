@@ -1,12 +1,5 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import {
-  DynamoDBDocumentClient,
-  PutCommand,
-  GetCommand,
-  UpdateCommand,
-  DeleteCommand,
-  ScanCommand,
-} from '@aws-sdk/lib-dynamodb';
+import { PutCommand, GetCommand, DeleteCommand, ScanCommand, DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 
 const client = new DynamoDBClient({});
 const ddbDocClient = DynamoDBDocumentClient.from(client);
@@ -19,51 +12,33 @@ export class Database {
   }
 
   async putItem(item: any) {
-    return ddbDocClient.send(
-      new PutCommand({
-        TableName: this.tableName,
-        Item: item,
-      })
-    );
+    const command = new PutCommand({
+      TableName: this.tableName,
+      Item: item,
+    });
+    return ddbDocClient.send(command);
   }
 
   async getItem(key: any) {
-    return ddbDocClient.send(
-      new GetCommand({
-        TableName: this.tableName,
-        Key: key,
-      })
-    );
-  }
-
-  async updateItem(item: any) {
-    return ddbDocClient.send(
-      new UpdateCommand({
-        TableName: this.tableName,
-        Key: { id: item.id },
-        UpdateExpression: 'set reviewText = :reviewText',
-        ExpressionAttributeValues: {
-          ':reviewText': item.reviewText,
-        },
-        ReturnValues: 'UPDATED_NEW',
-      })
-    );
+    const command = new GetCommand({
+      TableName: this.tableName,
+      Key: key,
+    });
+    return ddbDocClient.send(command);
   }
 
   async deleteItem(key: any) {
-    return ddbDocClient.send(
-      new DeleteCommand({
-        TableName: this.tableName,
-        Key: key,
-      })
-    );
+    const command = new DeleteCommand({
+      TableName: this.tableName,
+      Key: key,
+    });
+    return ddbDocClient.send(command);
   }
 
   async scanTable() {
-    return ddbDocClient.send(
-      new ScanCommand({
-        TableName: this.tableName,
-      })
-    );
+    const command = new ScanCommand({
+      TableName: this.tableName,
+    });
+    return ddbDocClient.send(command);
   }
 }
