@@ -1,6 +1,15 @@
-import * as AWS from 'aws-sdk';
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import {
+  DynamoDBDocumentClient,
+  PutCommand,
+  GetCommand,
+  UpdateCommand,
+  DeleteCommand,
+  ScanCommand,
+} from '@aws-sdk/lib-dynamodb';
 
-const db = new AWS.DynamoDB.DocumentClient();
+const client = new DynamoDBClient({});
+const ddbDocClient = DynamoDBDocumentClient.from(client);
 
 export class Database {
   private tableName: string;
@@ -10,22 +19,51 @@ export class Database {
   }
 
   async putItem(item: any) {
-    return db.put({ TableName: this.tableName, Item: item }).promise();
+    return ddbDocClient.send(
+      new PutCommand({
+        TableName: this.tableName,
+        Item: item,
+      })
+    );
   }
 
   async getItem(key: any) {
-    return db.get({ TableName: this.tableName, Key: key }).promise();
+    return ddbDocClient.send(
+      new GetCommand({
+        TableName: this.tableName,
+        Key: key,
+      })
+    );
   }
 
   async updateItem(item: any) {
-    return db.put({ TableName: this.tableName, Item: item }).promise();
+    return ddbDocClient.send(
+      new UpdateCommand({
+        TableName: this.tableName,
+        Key: { id: item.id },
+        UpdateExpression: 'set reviewText = :reviewText',
+        ExpressionAttributeValues: {
+          ':reviewText': item.reviewText,
+        },
+        ReturnValues: 'UPDATED_NEW',
+      })
+    );
   }
 
   async deleteItem(key: any) {
-    return db.delete({ TableName: this.tableName, Key: key }).promise();
+    return ddbDocClient.send(
+      new DeleteCommand({
+        TableName: this.tableName,
+        Key: key,
+      })
+    );
   }
 
   async scanTable() {
-    return db.scan({ TableName: this.tableName }).promise();
+    return ddbDocClient.send(
+      new ScanCommand({
+        TableName: this.tableName,
+      })
+    );
   }
 }
