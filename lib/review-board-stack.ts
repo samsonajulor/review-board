@@ -1,16 +1,38 @@
 import * as cdk from 'aws-cdk-lib';
-import { Construct } from 'constructs';
-// import * as sqs from 'aws-cdk-lib/aws-sqs';
+import { DynamoDBConstruct } from './dynamo';
+import { CognitoConstruct } from './cognito';
+import { LambdaConstruct } from './lambda';
+import { ApiGatewayConstruct } from './apigateway';
+import { PermissionConstruct } from './permissions';
 
 export class ReviewBoardStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+  constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    // The code that defines your stack goes here
+    // DynamoDB
+    const dynamo = new DynamoDBConstruct(this, 'DynamoDBConstruct');
 
-    // example resource
-    // const queue = new sqs.Queue(this, 'ReviewBoardQueue', {
-    //   visibilityTimeout: cdk.Duration.seconds(300)
-    // });
+    // Cognito
+    const cognito = new CognitoConstruct(this, 'CognitoConstruct');
+
+    // Permissions
+    const permissions = new PermissionConstruct(this, 'PermissionConstruct', {
+      table: dynamo.table,
+      dlq: new cdk.aws_sqs.Queue(this, 'DLQ'),
+    });
+
+    // Lambda Functions
+    const lambdas = new LambdaConstruct(this, 'LambdaConstruct', { permissions });
+
+    // API Gateway
+    new ApiGatewayConstruct(this, 'ApiGatewayConstruct', {
+      userPool: cognito.userPool,
+      lambdas: {
+        createReviewFn: lambdas.createReviewFn,
+        getReviewFn: lambdas.getReviewFn,
+        updateReviewFn: lambdas.updateReviewFn,
+        deleteReviewFn: lambdas.deleteReviewFn,
+      },
+    });
   }
 }
