@@ -52,6 +52,8 @@ test('Get handler retrieves all reviews', async () => {
 
   const response = await handler(event);
 
+  console.log({ response });
+
   expect(response.statusCode).toBe(200);
   const body = JSON.parse(response.body);
   expect(body.length).toBe(2);

@@ -17,6 +17,8 @@ test('Delete handler deletes a review', async () => {
 
   const response = await handler(event);
 
+  console.log({ response });
+
   expect(response.statusCode).toBe(200);
   const body = JSON.parse(response.body);
   expect(body.message).toBe('Review deleted');

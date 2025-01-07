@@ -24,6 +24,8 @@ test('Create handler processes sentiment and saves review', async () => {
 
   const response = await handler(event);
 
+  console.log({ response });
+
   expect(response.statusCode).toBe(201);
   const body = JSON.parse(response.body);
   expect(body.item.sentiment).toBe('POSITIVE');
