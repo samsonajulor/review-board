@@ -80,7 +80,7 @@ The **ReviewBoard Backend** is a scalable, modular, and serverless backend appli
    CLIENT_ID="6s7vncinogc4h6j10avsdk367o"
    CLIENT_SECRET="1co7dsv6mernqt56i4gh5e0rf3pf30fl0o0lsmb6nbt7483u0rok"
    API_URL="https://h7aatxhnf4.execute-api.us-east-1.amazonaws.com/prod/"
-   ADMIN_USERNAME="samson@tezda.com"
+   ADMIN_USERNAME="samson@gmail.com"
    ADMIN_PASSWORD="Aee3adgadgadg12@@!"
    USERNAME="samsonajulor@gmail.com"
    PASSWORD="Aee3adgadgadg12@@!"
