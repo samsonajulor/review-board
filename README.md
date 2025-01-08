@@ -108,12 +108,14 @@ The **ReviewBoard Backend** is a scalable, modular, and serverless backend appli
 
 ###### A separate endpoint for authenticating users would have been a better approach. Using the CLI seemed like a good idea at first but turned out to be less practical.
 
-1. **Create an App Client**:
+1. **Setup App Client**:
    - Navigate to the **Cognito Console**.
    - Select your User Pool (`ReviewBoardUserPool` created by CDK).
-   - Create an App Client (e.g., `ReviewBoardClient`).
-   - Disable "Generate client secret" (unless needed).
-   - Note the **Client ID** and **Client Secret**, if applicable.
+   - Update your env variables with the userpool id.
+   - Select the App Client (e.g., `CognitoConstructUserPoolClient1234546`).
+   - Update your env variables with **Client ID** and **Client Secret**,.
+   - create two users
+   - add one of the users to the Admins group.
 
 2. **Update User Passwords**:
    - Use the AWS CLI to update passwords for users created in the Cognito User Pool:
@@ -125,21 +127,14 @@ The **ReviewBoard Backend** is a scalable, modular, and serverless backend appli
        --permanent
      ```
 
-3. **Add Users to Groups**:
-   - Use the AWS CLI to add users to groups:
-     ```bash
-     aws cognito-idp admin-add-user-to-group \
-       --user-pool-id <USER_POOL_ID> \
-       --username <USERNAME> \
-       --group-name <GROUP_NAME>
-     ```
 
 Example:
 ```bash
-aws cognito-idp admin-add-user-to-group \
+aws cognito-idp admin-set-user-password \
   --user-pool-id us-east-1_174sYvq2f \
   --username samson@gmail.com \
-  --group-name Admins
+  --password password
+  --permanent
 ```
 
 ---
