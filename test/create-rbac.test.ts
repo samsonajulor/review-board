@@ -1,4 +1,4 @@
-import { handler } from '../lambda/create';
+import { lambdaHandler } from '../lambda/create';
 import { mockEvent, mockContext } from './test-utils';
 import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 import { mockClient } from 'aws-sdk-client-mock';
@@ -12,21 +12,21 @@ beforeEach(() => {
   comprehendMock.reset();
 });
 
-test('Create handler denies access for non-admin users', async () => {
+test('Create lambdaHandler denies access for non-admin users', async () => {
   const event = mockEvent({ 'cognito:groups': 'Users' });
 
-  const response = await handler(event, mockContext);
+  const response = await lambdaHandler(event, mockContext);
 
   expect(response.statusCode).toBe(403);
   const body = JSON.parse(response.body);
   expect(body.error).toBe('Access Denied');
 });
 
-test('Create handler validates request body', async () => {
+test('Create lambdaHandler validates request body', async () => {
   const event = mockEvent({ 'cognito:groups': 'Admins' });
   event.body = JSON.stringify({}); // Invalid body
 
-  const response = await handler(event, mockContext);
+  const response = await lambdaHandler(event, mockContext);
 
   expect(response.statusCode).toBe(400);
   const body = JSON.parse(response.body);

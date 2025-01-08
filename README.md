@@ -106,6 +106,8 @@ The **ReviewBoard Backend** is a scalable, modular, and serverless backend appli
 
 ### **3.5 Cognito Setup**
 
+###### A separate endpoint for authenticating users would have been a better approach. Using the CLI seemed like a good idea at first but turned out to be less practical.
+
 1. **Create an App Client**:
    - Navigate to the **Cognito Console**.
    - Select your User Pool (`ReviewBoardUserPool` created by CDK).

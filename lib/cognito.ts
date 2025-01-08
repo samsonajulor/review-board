@@ -1,4 +1,6 @@
+import { AuthFlowType } from '@aws-sdk/client-cognito-identity-provider';
 import * as cognito from 'aws-cdk-lib/aws-cognito';
+import { AuthFlow } from 'aws-cdk-lib/aws-cognito';
 import { Construct } from 'constructs';
 
 export class CognitoConstruct extends Construct {
@@ -22,7 +24,9 @@ export class CognitoConstruct extends Construct {
     new cognito.UserPoolClient(this, 'UserPoolClient', {
       userPool: this.userPool,
       generateSecret: true,
-      authFlows: undefined, // from the console, check ALLOW_ADMIN_USER_PASSWORD_AUTH and ALLOW_CUSTOM_AUTH
+      authFlows: {
+        adminUserPassword: true,
+      }
     });
   }
 }
