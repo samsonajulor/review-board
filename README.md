@@ -136,7 +136,7 @@ Example:
 ```bash
 aws cognito-idp admin-add-user-to-group \
   --user-pool-id us-east-1_174sYvq2f \
-  --username samson@tezda.com \
+  --username samson@gmail.com \
   --group-name Admins
 ```
 
