@@ -10,7 +10,7 @@ export class DynamoDBConstruct extends Construct {
 
     this.table = new dynamodb.Table(this, 'ReviewsTable', {
       partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
-      sortKey: { name: 'createdAt', type: dynamodb.AttributeType.STRING },
+      sortKey: undefined,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
 

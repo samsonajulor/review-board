@@ -1,6 +1,8 @@
 import { handler } from '../lambda/delete';
 import { mockClient } from 'aws-sdk-client-mock';
 import { DynamoDBDocumentClient, DeleteCommand } from '@aws-sdk/lib-dynamodb';
+import { mockContext } from './test-utils';
+import { APIGatewayProxyEvent } from 'aws-lambda';
 
 const ddbMock = mockClient(DynamoDBDocumentClient);
 
@@ -13,9 +15,9 @@ test('Delete handler deletes a review', async () => {
 
   const event = {
     pathParameters: { id: '12345' },
-  };
+  } as unknown as APIGatewayProxyEvent;
 
-  const response = await handler(event);
+  const response = await handler(event, mockContext);
 
   console.log({ response });
 

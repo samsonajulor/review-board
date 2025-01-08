@@ -1,12 +1,14 @@
 import * as lambda from 'aws-cdk-lib/aws-lambda';
-import * as nodejsfunction from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
 import { Construct } from 'constructs';
+import * as iam from 'aws-cdk-lib/aws-iam';
+import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import { PermissionConstruct } from './permissions';
 import * as path from 'path';
 
 interface LambdaProps {
   permissions: PermissionConstruct;
+  table: dynamodb.Table;
 }
 
 export class LambdaConstruct extends Construct {
@@ -14,6 +16,7 @@ export class LambdaConstruct extends Construct {
   public readonly getReviewFn: lambda.Function;
   public readonly updateReviewFn: lambda.Function;
   public readonly deleteReviewFn: lambda.Function;
+  public readonly getReviewFnWithId: lambda.Function;
 
   constructor(scope: Construct, id: string, props: LambdaProps) {
     super(scope, id);
@@ -22,44 +25,33 @@ export class LambdaConstruct extends Construct {
       queueName: 'ReviewBoardDLQ',
     });
 
-    const createLambda = (id: string, handler: string) =>
-      new nodejsfunction.NodejsFunction(this, id, {
-        runtime: lambda.Runtime.NODEJS_20_X,
-        functionName: `reviewBoard_${handler}`,
-        handler: `handler`,
-        entry: path.join(__dirname, `../lambda/${handler}.ts`),
+    const lambdaRole = new iam.Role(this, `LambdaRole`, {
+      assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
+    });
+
+    props.table.grantReadWriteData(lambdaRole);
+
+    lambdaRole.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole'));
+
+    const createLambda = (id: string, handler: string): lambda.Function =>
+      new lambda.Function(this, id, {
+        runtime: lambda.Runtime.NODEJS_18_X,
+        functionName: id,
+        handler: `lambda/${handler}`,
+        code: lambda.Code.fromAsset(path.join(__dirname, '../dist')),
         environment: {
-          TABLE_NAME: process.env.TABLE_NAME || 'ReviewsTable',
+          TABLE_NAME: props.table.tableName,
         },
         deadLetterQueue: dlq,
-        bundling: {
-          externalModules: [
-            '@aws-lambda-powertools/commons',
-            '@aws-lambda-powertools/logger',
-            '@aws-lambda-powertools/metrics',
-            '@aws-lambda-powertools/tracer',
-          ],
-          forceDockerBundling: false,
-        },
+        role: lambdaRole,
       });
 
-    this.createReviewFn = createLambda('CreateReviewFunction', 'create');
-    this.getReviewFn = createLambda('GetReviewFunction', 'get');
-    this.updateReviewFn = createLambda('UpdateReviewFunction', 'update');
-    this.deleteReviewFn = createLambda('DeleteReviewFunction', 'delete');
+    this.createReviewFn = createLambda('CreateReviewFunction', 'create.lambdaHandler');
+    this.getReviewFn = createLambda('GetReviewFunction', 'get.lambdaHandler');
+    this.getReviewFnWithId = createLambda('GetReviewFunctionWithId', 'get.lambdaHandler');
+    this.updateReviewFn = createLambda('UpdateReviewFunction', 'update.handler');
+    this.deleteReviewFn = createLambda('DeleteReviewFunction', 'delete.handler');
 
-    // Attach Permissions
-    props.permissions.attachSharedPermissions(this.createReviewFn);
-    props.permissions.attachDynamoPermissions(this.createReviewFn, ['dynamodb:PutItem']);
-    props.permissions.attachComprehendPermissions(this.createReviewFn);
-
-    props.permissions.attachSharedPermissions(this.getReviewFn);
-    props.permissions.attachDynamoPermissions(this.getReviewFn, ['dynamodb:GetItem', 'dynamodb:Query']);
-
-    props.permissions.attachSharedPermissions(this.updateReviewFn);
-    props.permissions.attachDynamoPermissions(this.updateReviewFn, ['dynamodb:UpdateItem']);
-
-    props.permissions.attachSharedPermissions(this.deleteReviewFn);
-    props.permissions.attachDynamoPermissions(this.deleteReviewFn, ['dynamodb:DeleteItem']);
+    props.permissions.attachPermissions(this.createReviewFn, ['comprehend:DetectSentiment']);
   }
 }

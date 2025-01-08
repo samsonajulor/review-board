@@ -1,11 +1,13 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { Database } from './db';
 import { logger } from './logger';
+import middy from '@middy/core';
+import { injectLambdaContext } from '@aws-lambda-powertools/logger';
 
 const db = new Database(process.env.TABLE_NAME || 'ReviewsTable');
 
-export const handler = async (event: APIGatewayProxyEvent, context: any): Promise<APIGatewayProxyResult> => {
-  logger.addContext(context); // Correct usage of addContext
+const handler = async (event: APIGatewayProxyEvent, context: any): Promise<APIGatewayProxyResult> => {
+  logger.addContext(context);
   logger.info('Received event', { event });
 
   try {
@@ -34,3 +36,5 @@ export const handler = async (event: APIGatewayProxyEvent, context: any): Promis
     };
   }
 };
+
+export const lambdaHandler = middy(handler).use(injectLambdaContext(logger, { logEvent: true }));

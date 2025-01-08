@@ -82,17 +82,6 @@ const PASSWORD = process.env.PASSWORD || 'you-password';
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'your-username';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'you-password';
 
-console.log({
-  BASE_URL,
-  USER_POOL_ID,
-  CLIENT_ID,
-  CLIENT_SECRET,
-  USERNAME,
-  PASSWORD,
-  ADMIN_USERNAME,
-  ADMIN_PASSWORD,
-});
-
 const cognitoClient = new CognitoIdentityProviderClient({ region: 'us-east-1' });
 
 export const getRealToken = async (username: string, password: string): Promise<string> => {

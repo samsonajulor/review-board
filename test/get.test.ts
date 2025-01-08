@@ -1,6 +1,8 @@
 import { handler } from '../lambda/get';
 import { mockClient } from 'aws-sdk-client-mock';
 import { DynamoDBDocumentClient, GetCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
+import { mockContext } from './test-utils';
+import { APIGatewayProxyEvent } from 'aws-lambda';
 
 const ddbMock = mockClient(DynamoDBDocumentClient);
 
@@ -20,9 +22,9 @@ test('Get handler retrieves a specific review', async () => {
 
   const event = {
     pathParameters: { id: '12345' },
-  };
+  } as unknown as APIGatewayProxyEvent;;
 
-  const response = await handler(event);
+  const response = await handler(event, mockContext);
 
   expect(response.statusCode).toBe(200);
   const body = JSON.parse(response.body);
@@ -48,9 +50,9 @@ test('Get handler retrieves all reviews', async () => {
     ],
   });
 
-  const event = {};
+  const event = {} as unknown as APIGatewayProxyEvent;;
 
-  const response = await handler(event);
+  const response = await handler(event, mockContext);
 
   console.log({ response });
 

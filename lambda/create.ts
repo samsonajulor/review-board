@@ -1,21 +1,33 @@
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
 import { Database } from './db';
 import { ComprehendClient, DetectSentimentCommand } from '@aws-sdk/client-comprehend';
 import { logger } from './logger';
+import middy from '@middy/core';
+import { injectLambdaContext } from '@aws-lambda-powertools/logger';
+import { reviewSchema } from '../validation/review.schema';
 
 const db = new Database(process.env.TABLE_NAME || 'ReviewsTable');
 const comprehendClient = new ComprehendClient({});
 
-export const handler = async (event: APIGatewayProxyEvent, context: any): Promise<APIGatewayProxyResult> => {
+const handler = async (event: APIGatewayProxyEvent, context: Context): Promise<APIGatewayProxyResult> => {
   logger.addContext(context);
   logger.info('Received event', { event });
 
   try {
-    const review = JSON.parse(event.body || '{}');
-    logger.info('Parsed review', { review });
+    const body = JSON.parse(event.body || '{}');
+    const { error } = reviewSchema.validate(body);
+    if (error) {
+      logger.error('Validation error', { error });
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ error: 'Invalid input', details: error.details }),
+      };
+    }
+
+    logger.info('Parsed and validated review', { body });
 
     const command = new DetectSentimentCommand({
-      Text: review.reviewText,
+      Text: body.reviewText,
       LanguageCode: 'en',
     });
 
@@ -25,7 +37,7 @@ export const handler = async (event: APIGatewayProxyEvent, context: any): Promis
     const item = {
       id: Date.now().toString(),
       createdAt: new Date().toISOString(),
-      reviewText: review.reviewText,
+      reviewText: body.reviewText,
       sentiment: sentimentResult.Sentiment,
       sentimentScore: sentimentResult.SentimentScore,
     };
@@ -45,3 +57,5 @@ export const handler = async (event: APIGatewayProxyEvent, context: any): Promis
     };
   }
 };
+
+export const lambdaHandler = middy(handler).use(injectLambdaContext(logger, { logEvent: true }));

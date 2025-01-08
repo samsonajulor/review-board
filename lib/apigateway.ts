@@ -10,6 +10,7 @@ interface ApiGatewayProps {
     getReviewFn: cdk.aws_lambda.IFunction;
     updateReviewFn: cdk.aws_lambda.IFunction;
     deleteReviewFn: cdk.aws_lambda.IFunction;
+    getReviewFnWithId: cdk.aws_lambda.IFunction;
   };
   logsRole: cdk.aws_iam.IRole;
 }
@@ -33,18 +34,19 @@ export class ApiGatewayConstruct extends Construct {
       },
     });
 
-    // Add Cognito Authorizer
     const authorizer = new apigateway.CognitoUserPoolsAuthorizer(this, 'Authorizer', {
       cognitoUserPools: [props.userPool],
     });
 
-    // Define resources and methods
     const reviewsResource = api.root.addResource('reviews');
     reviewsResource.addMethod('POST', new apigateway.LambdaIntegration(props.lambdas.createReviewFn), { authorizer });
 
     reviewsResource.addMethod('GET', new apigateway.LambdaIntegration(props.lambdas.getReviewFn), { authorizer });
 
     const reviewResource = reviewsResource.addResource('{id}');
+
+    reviewResource.addMethod('GET', new apigateway.LambdaIntegration(props.lambdas.getReviewFnWithId), { authorizer });
+
     reviewResource.addMethod('PUT', new apigateway.LambdaIntegration(props.lambdas.updateReviewFn), { authorizer });
 
     reviewResource.addMethod('DELETE', new apigateway.LambdaIntegration(props.lambdas.deleteReviewFn), { authorizer });

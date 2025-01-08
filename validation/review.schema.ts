@@ -1,4 +1,4 @@
-import * as Joi from 'joi';
+import Joi from 'joi';
 
 export const reviewSchema = Joi.object({
   reviewText: Joi.string().min(3).required().messages({

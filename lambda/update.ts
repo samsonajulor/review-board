@@ -2,6 +2,7 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from 'aws-lambda
 import { Database } from './db';
 import { ComprehendClient, DetectSentimentCommand } from '@aws-sdk/client-comprehend';
 import { logger } from './logger';
+import { reviewSchema } from '../validation/review.schema';
 
 const db = new Database(process.env.TABLE_NAME || 'ReviewsTable');
 const comprehendClient = new ComprehendClient({});
@@ -18,6 +19,17 @@ export const handler = async (event: APIGatewayProxyEvent, context: Context): Pr
     }
 
     const updatedReview = JSON.parse(event.body || '{}');
+
+    const { error } = reviewSchema.validate(updatedReview);
+    if (error) {
+      logger.error('Validation error', { error });
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ error: 'Invalid input', details: error.details }),
+      };
+    }
+
+    logger.info('Parsed and validated review', { updatedReview });
 
     const command = new DetectSentimentCommand({
       Text: updatedReview.reviewText,

@@ -17,22 +17,17 @@ export class ReviewBoardStack extends cdk.Stack {
       ],
     });
 
-    // Create DynamoDB Construct
     const dynamo = new DynamoDBConstruct(this, 'DynamoDBConstruct');
 
-    // Create Cognito Construct
     const cognito = new CognitoConstruct(this, 'CognitoConstruct');
 
-    // Create Permission Construct
     const permissions = new PermissionConstruct(this, 'PermissionConstruct', {
       table: dynamo.table,
       dlq: new cdk.aws_sqs.Queue(this, 'DLQ'),
     });
 
-    // Create Lambda Construct
-    const lambdas = new LambdaConstruct(this, 'LambdaConstruct', { permissions });
+    const lambdas = new LambdaConstruct(this, 'LambdaConstruct', { permissions, table: dynamo.table });
 
-    // Create API Gateway Construct with logging role
     new ApiGatewayConstruct(this, 'ApiGatewayConstruct', {
       userPool: cognito.userPool,
       lambdas: {
@@ -40,6 +35,7 @@ export class ReviewBoardStack extends cdk.Stack {
         getReviewFn: lambdas.getReviewFn,
         updateReviewFn: lambdas.updateReviewFn,
         deleteReviewFn: lambdas.deleteReviewFn,
+        getReviewFnWithId: lambdas.getReviewFnWithId,
       },
       logsRole: apiGatewayLogsRole,
     });

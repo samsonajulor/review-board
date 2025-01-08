@@ -2,6 +2,8 @@ import { handler } from '../lambda/update';
 import { mockClient } from 'aws-sdk-client-mock';
 import { ComprehendClient, DetectSentimentCommand } from '@aws-sdk/client-comprehend';
 import { DynamoDBDocumentClient, PutCommand } from '@aws-sdk/lib-dynamodb';
+import { mockContext } from './test-utils';
+import { APIGatewayProxyEvent } from 'aws-lambda';
 
 const ddbMock = mockClient(DynamoDBDocumentClient);
 const comprehendMock = mockClient(ComprehendClient);
@@ -24,9 +26,9 @@ test('Update handler updates sentiment and saves review', async () => {
       reviewText: 'It was okay.',
       createdAt: '2025-01-01T12:00:00Z',
     }),
-  };
+  } as unknown as APIGatewayProxyEvent;
 
-  const response = await handler(event);
+  const response = await handler(event, mockContext);
 
   console.log({ response });
 
