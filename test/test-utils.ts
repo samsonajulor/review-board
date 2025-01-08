@@ -73,7 +73,7 @@ const calculateSecretHash = (username: string, clientId: string, clientSecret: s
   return hmac.digest('base64');
 };
 
-const BASE_URL = process.env.API_URL || 'https://urzhxzr168.execute-api.us-east-1.amazonaws.com/prod/';
+const BASE_URL = process.env.API_URL || 'https://your-app-url';
 const USER_POOL_ID = process.env.USER_POOL_ID || 'your-user-pool-id';
 const CLIENT_ID = process.env.CLIENT_ID || 'your-client-id';
 const CLIENT_SECRET = process.env.CLIENT_SECRET || 'your-client-secret';

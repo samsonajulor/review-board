@@ -3,7 +3,7 @@ import { apiClient, getAdminToken, getUserToken } from '../test-utils';
 describe('Delete Review Integration Tests', () => {
   it('should allow an admin to delete a review', async () => {
     const token = await getAdminToken();
-    const reviewId = '1736275855303';
+    const reviewId = '1736318345543';
 
     const response = await apiClient.delete(`/reviews/${reviewId}`, {
       headers: { Authorization: `Bearer ${token}` },
@@ -15,7 +15,7 @@ describe('Delete Review Integration Tests', () => {
 
   it('should deny access for a non-admin user', async () => {
     const token = await getUserToken();
-    const reviewId = '1736275855303';
+    const reviewId = '1736318345543';
 
     try {
       await apiClient.delete(`/reviews/${reviewId}`, {

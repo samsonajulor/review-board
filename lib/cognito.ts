@@ -21,6 +21,8 @@ export class CognitoConstruct extends Construct {
 
     new cognito.UserPoolClient(this, 'UserPoolClient', {
       userPool: this.userPool,
+      generateSecret: true,
+      authFlows: undefined, // from the console, check ALLOW_ADMIN_USER_PASSWORD_AUTH and ALLOW_CUSTOM_AUTH
     });
   }
 }

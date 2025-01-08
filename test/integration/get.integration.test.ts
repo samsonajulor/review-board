@@ -35,10 +35,10 @@ describe('Get Review Integration Tests', () => {
       console.error('Error fetching all reviews as non-admin:', error);
       throw error;
     }
-  });
+  }, 10000);
 
   it('should fetch a specific review by ID', async () => {
-    const reviewId = '1736275855303';
+    const reviewId = '1736318345543';
     try {
       const token = await getAdminToken();
 
@@ -54,5 +54,5 @@ describe('Get Review Integration Tests', () => {
       console.error(`Error fetching review with ID ${reviewId}:`, error);
       throw error;
     }
-  });
+  }, 10000);
 });

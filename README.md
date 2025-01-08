@@ -97,7 +97,7 @@ The **ReviewBoard Backend** is a scalable, modular, and serverless backend appli
 
 2. Deploy the application:
    ```bash
-   npx cdk deploy
+   npm run deploy
    ```
 
 3. Note the **API Gateway URL** and **Cognito User Pool ID** from the deployment output.
