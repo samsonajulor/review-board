@@ -38,7 +38,7 @@ describe('Get Review Integration Tests', () => {
   }, 10000);
 
   it('should fetch a specific review by ID', async () => {
-    const reviewId = '1736318345543';
+    const reviewId = '1736323026721';
     try {
       const token = await getAdminToken();
 

@@ -1,6 +1,4 @@
-import { AuthFlowType } from '@aws-sdk/client-cognito-identity-provider';
 import * as cognito from 'aws-cdk-lib/aws-cognito';
-import { AuthFlow } from 'aws-cdk-lib/aws-cognito';
 import { Construct } from 'constructs';
 
 export class CognitoConstruct extends Construct {
